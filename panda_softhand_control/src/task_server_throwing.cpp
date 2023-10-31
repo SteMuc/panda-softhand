@@ -49,27 +49,47 @@ int main(int argc, char **argv)
       ROS_INFO_STREAM("Failed to completed the service");
    }
    
-   // panda_softhand_control::set_object::Request req_joint_place;
-   // req_joint_place.object_name = "first";
-   // panda_softhand_control::set_object::Response resp_joint_place;
+   panda_softhand_control::set_object::Request req_set_place;
+   req_set_place.object_name = "pick1";
+   panda_softhand_control::set_object::Response resp_set_place;
 
-   // ROS_INFO("Call the call_set_joint_place service");
+   ROS_INFO("Call the call_set_place service");
 
-   // bool success_joint_place = task_sequencer_obj.call_set_place(req_joint_place,resp_joint_place);
-
+   bool success_joint_place = task_sequencer_obj.call_set_object(req_set_place,resp_set_place);
    
-   // /* 2) Going to grasping position */
 
-   // ROS_INFO("Going to grasping position for the handtool");
+
+   panda_softhand_control::set_object::Request req_vacuum;
+   req_vacuum.object_name = "place1";
+   panda_softhand_control::set_object::Response resp_vacuum;
+
+   ROS_INFO("Call the call_set_vacuum_place ");
+
+   bool success_call_vacuum = task_sequencer_obj.call_set_vacuum_place(req_vacuum,resp_vacuum);
    
-   // //TO DO
-   // bool success_grasping = task_sequencer_obj.call_grasp_handtool_task(req,resp);
+   /* 2) Going to grasping position */
+
+   ROS_INFO("Going to grasping position!");
+  
+   
+   bool success_grasping = task_sequencer_obj.call_simple_pick_and_place(req,resp);
     
-   // if(success_grasping){
-   //    ROS_INFO_STREAM("Grasping service completed correctly: " << resp.success);
-   // } else {
-   //    ROS_INFO_STREAM("Failed to completed the grasping service");
-   // }
+   if(success_grasping){
+      ROS_INFO_STREAM("Grasping service completed correctly: " << resp.success);
+   } else {
+      ROS_INFO_STREAM("Failed to completed the grasping service");
+   }
+   
+  
+
+
+
+
+
+
+
+
+
 
    // panda_softhand_control::set_object::Request req_throwing;
    // req_throwing.object_name = "object1";

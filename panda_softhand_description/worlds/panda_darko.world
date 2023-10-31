@@ -88,7 +88,7 @@
 		   </link>
     </model>
 
-	<!-- <model name="TableRight">  
+	<model name="TableRight">  
 			<pose>0.2 -0.50 0.35 0 0 0 </pose>
 			<static>true</static>
 			<link name='linkTableRight'>
@@ -114,7 +114,7 @@
 				<self_collide>0</self_collide>
 				<gravity>1</gravity>
 			</link>
-    </model> -->
+    </model>
 
 	<model name="TableLeft">  
 			<pose>0.2 0.50 0.35 0 0 0 </pose>
@@ -144,148 +144,12 @@
 			</link>
     </model>
 
-	<model name="Box">  
-			<pose>0.690 0.007 0.12 0 0 0 </pose>
-			<static>true</static>
-			<link name='linkBox'>
-				<pose>0 0 0 0 0 0</pose>
-
-				<collision name="my_collisionBox">
-		 			<pose>0 0 0 0 0 0</pose>
-					<geometry>
-		        <box>
-		          <size>0.11 0.11 0.21</size>
-		        </box>
-		            </geometry>
-	            </collision>
-
-				<visual name="my_visualBox">
-					<geometry>
-		        <box>
-					<size>0.11 0.11 0.21</size>
-		        </box>
-		           </geometry>
-	      </visual>
-
-				<self_collide>0</self_collide>
-				<gravity>1</gravity>
-			</link>
-    </model>
-
-	<model name="wall_dx">
-			<pose> 0.25 0.28 0.09 0 0 0</pose>
-			<static>true</static>
-			<link name='linkTable'>
-				<pose>0 0 0 0 0 0</pose>
-				
-				<collision name="my_collisionTable">
-		 			<pose>0 0 0 0 0 0</pose>
-					<geometry>
-		        <box>
-		          <size>0.34 0.005 0.18</size>
-		        </box>
-		      </geometry>
-	      </collision>
-				
-				<visual name="my_visualTable">
-					<geometry>
-		        <box>
-					<size>0.34 0.005 0.18</size>
-		        </box>
-		      </geometry>
-	      </visual>
-				
-				<self_collide>0</self_collide>		
-				<gravity>1</gravity>
-			</link>
-    </model>
 
 
-	<model name="wall_sx">
-			<pose> 0.25 -0.28 0.09 0 0 0</pose>
-			<static>true</static>
-			<link name='linkTable'>
-				<pose>0 0 0 0 0 0</pose>
-				
-				<collision name="my_collisionTable">
-		 			<pose>0 0 0 0 0 0</pose>
-					<geometry>
-		        <box>
-		          <size>0.34 0.005 0.18</size>
-		        </box>
-		      </geometry>
-	      </collision>
-				
-				<visual name="my_visualTable">
-					<geometry>
-		        <box>
-					<size>0.34 0.005 0.18</size>
-		        </box>
-		      </geometry>
-	      </visual>
-				
-				<self_collide>0</self_collide>		
-				<gravity>1</gravity>
-			</link>
-    </model>
+	
 
 
-
-	<model name="wall_up">
-			<pose> 0.42 0 0.09 0 0 0</pose>
-			<static>true</static>
-			<link name='linkTable'>
-				<pose>0 0 0 0 0 0</pose>
-				
-				<collision name="my_collisionTable">
-		 			<pose>0 0 0 0 0 0</pose>
-					<geometry>
-		        <box>
-		          <size>0.005 0.56 0.18</size>
-		        </box>
-		      </geometry>
-	      </collision>
-				
-				<visual name="my_visualTable">
-					<geometry>
-		        <box>
-					<size>0.005 0.56 0.18</size>
-		        </box>
-		      </geometry>
-	      </visual>
-				
-				<self_collide>0</self_collide>		
-				<gravity>1</gravity>
-			</link>
-    </model>
-
-	<model name="wall_back">
-			<pose> 0.1 0 0.09 0 0 0</pose>
-			<static>true</static>
-			<link name='linkTable'>
-				<pose>0 0 0 0 0 0</pose>
-				
-				<collision name="my_collisionTable">
-		 			<pose>0 0 0 0 0 0</pose>
-					<geometry>
-		        <box>
-		          <size>0.005 0.56 0.18</size>
-		        </box>
-		      </geometry>
-	      </collision>
-				
-				<visual name="my_visualTable">
-					<geometry>
-		        <box>
-					<size>0.005 0.56 0.18</size>
-		        </box>
-		      </geometry>
-	      </visual>
-				
-				<self_collide>0</self_collide>		
-				<gravity>1</gravity>
-			</link>
-    </model>
+	
 
 
 	<!-- <model name="wall_down">

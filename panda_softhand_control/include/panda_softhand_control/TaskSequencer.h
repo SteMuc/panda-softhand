@@ -110,7 +110,8 @@ class TaskSequencer {
         bool call_set_duty_cycle(panda_softhand_control::set_object::Request &req, panda_softhand_control::set_object::Response &res);
         
         bool call_replace_task(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res);
-
+        
+        bool call_simple_pick_and_place(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res);
     /// private variables -------------------------------------------------------------------------
 	private:
 		ros::NodeHandle nh;
