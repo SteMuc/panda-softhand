@@ -1,7 +1,10 @@
 <?xml version="1.0"?>
 <launch>
-<!-- Load main node for throwing task service -->
-    <include file="$(find panda_softhand_control)/launch/launchTaskServer.launch" />
+	<!-- Launch arguments -->
+	<arg name="task_sequences_params" default="$(find panda_softhand_control)/configs/task_sequences_params.yaml"/>
+	
+	<!-- Loading config file to param server -->
+	<rosparam command="load" file="$(arg task_sequences_params)"/>
     <!-- <include file="$(find panda_softhand_control)/launch/ros_bag_record.launch" /> -->
   	<node name="task_server_node_throwing" pkg="panda_softhand_control" type="task_server_throwing" output="screen"/>	
 </launch>

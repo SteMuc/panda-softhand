@@ -112,6 +112,7 @@ bool SlerpPlan::performMotionPlan(){
     // Move group interface
     moveit::planning_interface::MoveGroupInterface group(this->group_name);
 
+
     /* If VISUAL is enabled */
     #ifdef VISUAL
 
@@ -119,8 +120,10 @@ bool SlerpPlan::performMotionPlan(){
 
     // Getting the robot joint model
     const robot_state::JointModelGroup* joint_model_group = group.getCurrentState()->getJointModelGroup(this->group_name);
+    
 
     // Visual tools
+    namespace rvt = rviz_visual_tools;
     moveit_visual_tools::MoveItVisualTools visual_tools("world");
     visual_tools.deleteAllMarkers();
 
@@ -148,9 +151,24 @@ bool SlerpPlan::performMotionPlan(){
         group.setStartState(start_state);
     }
 
+	// Scale the velocity and acceleration of the computed trajectory
+    const double velocity_scaling_factor = 0.4; // Set your desired velocity scaling factor
+    const double acceleration_scaling_factor = 0.1; // Set your desired acceleration scaling factor
+
 	// Planning for the waypoints path
 	moveit_msgs::RobotTrajectory trajectory;
 	double fraction = group.computeCartesianPath(cart_waypoints, 0.01, 0.0, trajectory);
+    
+    //
+    robot_trajectory::RobotTrajectory rt(start_state.getRobotModel(), this->group_name);
+
+    rt.setRobotTrajectoryMsg(start_state, trajectory);
+    trajectory_processing::TimeOptimalTrajectoryGeneration totg;
+    
+    bool success = totg.computeTimeStamps(rt, velocity_scaling_factor, acceleration_scaling_factor);
+    ROS_INFO("Computed time stamp %s",success?"SUCCEDED":"FAILED");
+    rt.getRobotTrajectoryMsg(trajectory);
+    //
     this->computed_trajectory = trajectory.joint_trajectory;
 
 	ROS_INFO("Plan (cartesian path) (%.2f%% acheived)", fraction * 100.0);
@@ -165,7 +183,8 @@ bool SlerpPlan::performMotionPlan(){
 
     ROS_INFO("Visualizing the computed plan as trajectory line.");
     visual_tools.publishAxisLabeled(cart_waypoints.back(), "goal pose");
-    visual_tools.publishTrajectoryLine(trajectory, joint_model_group);
+    // visual_tools.publishTrajectoryLine(trajectory, joint_model_group);
+    visual_tools.publishTrajectoryLine(trajectory, joint_model_group->getLinkModel(this->end_effector_name), joint_model_group, rvt::LIME_GREEN);
     visual_tools.trigger();
     
     #ifdef PROMPT

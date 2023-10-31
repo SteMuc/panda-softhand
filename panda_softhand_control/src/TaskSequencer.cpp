@@ -642,9 +642,9 @@ bool TaskSequencer::call_simple_grasp_task(std_srvs::SetBool::Request &req, std_
     }
 
     // Getting current joints
-    std::vector<double> now_joints;
+    std::vector<double> home_joints;
     double timeout = 3.0;
-    bool found_ik_now = this->performIK(grasp_pose, timeout, now_joints);
+    bool found_ik_now = this->performIK(grasp_pose, timeout, home_joints);
     if (!found_ik_now){
         ROS_ERROR("Could not perform IK.");
         res.success = false;
@@ -653,7 +653,7 @@ bool TaskSequencer::call_simple_grasp_task(std_srvs::SetBool::Request &req, std_
     }
 
     // 4) Lifting the grasped? object
-    if(!this->panda_softhand_client.call_joint_service(this->home_joints, now_joints, this->tmp_traj) || !this->franka_ok){
+    if(!this->panda_softhand_client.call_joint_service(this->home_joints, false, this->tmp_traj_arm, this->tmp_traj_arm) || !this->franka_ok){
         ROS_ERROR("Could not lift to the specified pose.");
         res.success = false;
         res.message = "The service call_simple_grasp_task was NOT performed correctly!";
@@ -776,9 +776,9 @@ bool TaskSequencer::call_complex_grasp_task(panda_softhand_control::complex_gras
     }
 
     // Getting current joints
-    std::vector<double> now_joints;
+    std::vector<double> home_joints;
     double timeout = 3.0;
-    bool found_ik_now = this->performIK(grasp_pose, timeout, now_joints);
+    bool found_ik_now = this->performIK(grasp_pose, timeout, home_joints);
     if (!found_ik_now){
         ROS_ERROR("Could not perform IK.");
         res.success = false;
@@ -787,7 +787,7 @@ bool TaskSequencer::call_complex_grasp_task(panda_softhand_control::complex_gras
     }
 
     // 4) Lifting the grasped? object
-    if(!this->panda_softhand_client.call_joint_service(this->home_joints, now_joints, this->tmp_traj) || !this->franka_ok){
+    if(!this->panda_softhand_client.call_joint_service(this->home_joints, false, this->tmp_traj_arm, this->tmp_traj_arm) || !this->franka_ok){
         ROS_ERROR("Could not plan lift to the specified pose.");
         res.success = false;
         res.message = "The service call_complex_grasp_task was NOT performed correctly!";
@@ -834,7 +834,7 @@ bool TaskSequencer::call_simple_place_task(std_srvs::SetBool::Request &req, std_
     }
 
     // 1) Going to place joint config
-    if(!this->panda_softhand_client.call_joint_service(this->place_joints, this->null_joints, this->tmp_traj) || !this->franka_ok){
+    if(!this->panda_softhand_client.call_joint_service(this->home_joints, false, this->tmp_traj_arm, this->tmp_traj_arm) || !this->franka_ok){
         ROS_ERROR("Could not plan to the specified place joint config.");
         res.success = false;
         res.message = "The service call_simple_place_task was NOT performed correctly!";
@@ -895,44 +895,46 @@ bool TaskSequencer::call_simple_home_task(std_srvs::SetBool::Request &req, std_s
         return true;
     }
 
-    // 1) Going to home joint config
-    if(!this->panda_softhand_client.call_joint_service(this->home_joints, this->null_joints, this->tmp_traj) || !this->franka_ok){
+    // PLAN 1: Planning to HOME JOINTS
+    if(!this->panda_softhand_client.call_joint_service(this->home_joints, true, this->tmp_traj_arm, this->tmp_traj_arm) || !this->franka_ok){
         ROS_ERROR("Could not plan to the specified home joint config.");
         res.success = false;
         res.message = "The service call_simple_home_task was NOT performed correctly!";
         return false;
     }
-
-    if(!this->panda_softhand_client.call_arm_control_service(this->tmp_traj) || !this->franka_ok){
+    
+    //EXEC 1: Going to HOME JOINTS
+    if(!this->panda_softhand_client.call_arm_control_service(this->tmp_traj_arm) || !this->franka_ok){
         ROS_ERROR("Could not go to home joint config.");
         res.success = false;
         res.message = "The service call_simple_home_task was NOT performed correctly! Error in arm control.";
         return false;
     }
 
-    // 2) Opening hand
-    if(!this->panda_softhand_client.call_hand_plan_service(0.0, 2.0, this->tmp_traj) || !this->franka_ok){
+    // PLAN 2 
+    if(!this->panda_softhand_client.call_hand_plan_service(1.0, 1.5, this->tmp_traj) || !this->franka_ok){
         ROS_ERROR("Could plan the simple open.");
         res.success = false;
         res.message = "The service call_simple_home_task was NOT performed correctly! Error plan in hand plan.";
         return false;
     }
-
+    // WAIT 1:
     if(!this->panda_softhand_client.call_arm_wait_service(this->waiting_time) || !this->franka_ok){        // WAITING FOR END EXEC
         ROS_ERROR("TIMEOUT!!! EXEC TOOK TOO MUCH TIME for going to home joint config");
         res.success = false;
         res.message = "The service call_simple_home_task was NOT performed correctly! Error wait in arm control.";
         return false;
     }
-
+    
+    // EXEC 2
     if(!this->panda_softhand_client.call_hand_control_service(this->tmp_traj) || !this->franka_ok){
         ROS_ERROR("Could not perform the simple open.");
         res.success = false;
         res.message = "The service call_simple_home_task was NOT performed correctly! Error plan in hand control.";
         return false;
     }
-
-    if(!this->panda_softhand_client.call_hand_wait_service(ros::Duration(3.0)) || !this->franka_ok){
+    // WAIT 2
+    if(!this->panda_softhand_client.call_hand_wait_service(ros::Duration(10.0)) || !this->franka_ok){
         ROS_ERROR("Could not wait the simple open.");
         res.success = false;
         res.message = "The service call_simple_home_task was NOT performed correctly! Error plan in hand wait.";
@@ -960,7 +962,7 @@ bool TaskSequencer::call_simple_handover_task(std_srvs::SetBool::Request &req, s
     }
 
     // 1) Going to handover joint config
-    if(!this->panda_softhand_client.call_joint_service(this->handover_joints, this->null_joints, this->tmp_traj) || !this->franka_ok){
+    if(!this->panda_softhand_client.call_joint_service(this->home_joints, false, this->tmp_traj_arm, this->tmp_traj_arm) || !this->franka_ok){
         ROS_ERROR("Could not go to the specified handover joint config.");
         res.success = false;
         res.message = "The service call_simple_handover_task was NOT performed correctly!";
@@ -1044,7 +1046,7 @@ bool TaskSequencer::call_grasp_handtool_task(std_srvs::SetBool::Request &req, st
 
     /*PLAN 1*/
 
-    if(!this->panda_softhand_client.call_joint_service(this->place_joints, this->null_joints, this->tmp_traj_arm) || !this->franka_ok){
+    if(!this->panda_softhand_client.call_joint_service(this->home_joints, false, this->tmp_traj_arm, this->tmp_traj_arm) || !this->franka_ok){
         ROS_ERROR("Could not plan to the specified place joint config.");
         res.success = false;
         res.message = "The service call_simple_place_task was NOT performed correctly!";
@@ -1208,7 +1210,7 @@ bool TaskSequencer::call_throwing_task(std_srvs::SetBool::Request &req, std_srvs
     
     /* PLAN 1 */
 
-    if(!this->panda_softhand_client.call_joint_service(this->place_joints, this->null_joints, this->tmp_traj_arm) || !this->franka_ok){
+    if(!this->panda_softhand_client.call_joint_service(this->home_joints, false, this->tmp_traj_arm, this->tmp_traj_arm) || !this->franka_ok){
         ROS_ERROR("Could not plan to the specified place joint config.");
         res.success = false;
         res.message = "The service call_simple_place_task was NOT performed correctly!";
@@ -1349,13 +1351,13 @@ bool TaskSequencer::call_throwing_task(std_srvs::SetBool::Request &req, std_srvs
     trajectory_msgs::JointTrajectoryPoint last_point3 = traj_arm_points3.back();
     
     int n = 7;
-    std::vector<double> now_joints_end(n,0.0);
+    std::vector<double> home_joints_end(n,0.0);
 
-    for(int i=0; i < now_joints_end.size(); i++){
-        now_joints_end.at(i) = last_point3.positions[i];
+    for(int i=0; i < home_joints_end.size(); i++){
+        home_joints_end.at(i) = last_point3.positions[i];
     }
 
-    if(!this->panda_softhand_client.call_joint_service(this->throwing_joints, now_joints_end, this->tmp_traj_arm) || !this->franka_ok){
+    if(!this->panda_softhand_client.call_joint_service(this->home_joints, false, this->tmp_traj_arm, this->tmp_traj_arm) || !this->franka_ok){
         ROS_ERROR("Could not lift to the specified pose.");
         res.success = false;
         res.message = "The service call_throwing_task was NOT performed correctly!";
@@ -1467,7 +1469,7 @@ bool TaskSequencer::call_throwing_task(std_srvs::SetBool::Request &req, std_srvs
 
     /**PLAN 1*/
 
-    if(!this->panda_softhand_client.call_joint_service(this->throwing_joints, this->null_joints, this->tmp_traj_arm) || !this->franka_ok){
+    if(!this->panda_softhand_client.call_joint_service(this->home_joints, false, this->tmp_traj_arm, this->tmp_traj_arm) || !this->franka_ok){
         ROS_ERROR("Could not plan to the specified place joint config.");
         res.success = false;
         res.message = "The service call_simple_place_task was NOT performed correctly!";
@@ -1675,7 +1677,7 @@ bool TaskSequencer::call_replace_task(std_srvs::SetBool::Request &req, std_srvs:
 
     /*PLAN 1*/
 
-    if(!this->panda_softhand_client.call_joint_service(this->place_joints, this->null_joints, this->tmp_traj_arm) || !this->franka_ok){
+    if(!this->panda_softhand_client.call_joint_service(this->home_joints, false, this->tmp_traj_arm, this->tmp_traj_arm) || !this->franka_ok){
         ROS_ERROR("Could not plan to the specified place joint config.");
         res.success = false;
         res.message = "The service call_simple_place_task was NOT performed correctly!";
@@ -1844,7 +1846,7 @@ bool TaskSequencer::call_replace_task(std_srvs::SetBool::Request &req, std_srvs:
 
     /*PLAN 6*/
 
-    if(!this->panda_softhand_client.call_joint_service(this->home_joints, now_joints_last, this->tmp_traj_arm) || !this->franka_ok){
+    if(!this->panda_softhand_client.call_joint_service(this->home_joints, false, this->tmp_traj_arm, this->tmp_traj_arm) || !this->franka_ok){
         ROS_ERROR("Could not plan to the specified place joint config.");
         res.success = false;
         res.message = "The service call_simple_place_task was NOT performed correctly!";

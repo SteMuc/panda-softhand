@@ -3,15 +3,12 @@
 
   <!-- ARGS -->
   <xacro:arg name="arm_id" default="panda"/>
-  <xacro:arg name="robot_ns" default="panda_arm"/>
+  <xacro:arg name="robot_ns" default="panda"/>
 
   <!-- MODELS -->
   <xacro:include filename="$(find franka_description)/robots/panda_arm.xacro"/>
-  <xacro:include filename="$(find soft_hand_description)/model/soft_hand_soma_panda.urdf.xacro"/> 
-
-  <!-- con flangia -->
-  <!-- <xacro:include filename="$(find soft_hand_description)/model/soft_hand_darko_panda.urdf.xacro"/> -->
-
+  <xacro:include filename="$(find qb_hand_description)/urdf/qbhand.utils.xacro"/>
+  
   <!-- WORLD -->
   <link name="world"/>
 
@@ -22,28 +19,24 @@
   </joint>
 
   <!-- PANDA ARM -->
-  <xacro:panda_arm />
+  <xacro:panda_arm/>
   
   <!-- RIGHT SOFTHAND -->
-  <xacro:soft_hand_soma_panda parent="panda_link8" name="right_hand" left="false" withAdaptiveTransmission="true" useMimicTag="true">
-    <origin xyz="0 0 0" rpy="0 0 3.1415"/>
-  </xacro:soft_hand_soma_panda>
+	<xacro:arg name="namespace" default="qbhand1"/>
 
-  <!-- EXTRA ENDEFFECTOR-CON FLANGIA ANGOLATA -->
+    <xacro:build_hand_from_yaml_with_90_deg_flange configuration="qbhand_right" namespace="$(arg namespace)" parent="panda_link8" parent_link_suffix="">
+		  <origin xyz="0.045 0 0.035" rpy="1.57 0 1.57"/>
+	  </xacro:build_hand_from_yaml_with_90_deg_flange>
+
+  
+  <!-- EXTRA ENDEFFECTOR -->
   <joint name="right_hand_ee_joint" type="fixed">
-    <origin xyz="0.130 0.000 0.035" rpy="0 0 0"/>
+    <origin xyz="0.102 -0.003 0.037" rpy="0 0 0"/>
     <parent link="panda_link8" />
     <child link="right_hand_ee_link" />
   </joint>
 
-  <!-- EXTRA ENDEFFECTOR-SENZA FLANGIA -->
-  <!-- <joint name="right_hand_ee_joint" type="fixed">
-    <origin xyz="0.000 0.000 0.110" rpy="-1.5714 1.5714 0"/>
-    <parent link="panda_link8" />
-    <child link="right_hand_ee_link" />
-  </joint> -->
-
   <link name="right_hand_ee_link">
-  </link> 
+  </link>
 
 </robot>
